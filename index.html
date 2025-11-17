@@ -3,15 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Polish Migration 1966–2024</title>
+  <title>Polish Migration 1966–2024 EXPERIMENT</title>
 
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
+
+
+  <!-- D3 must be loaded BEFORE script.js -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
- 
-  <div id="chart"></div>
+  <!-- LINE CHART -->
+ <!-- MAIN YEARLY LINE CHART -->
+<div id="chart"></div>
 
-  <script src="script.js"></script>
+<!-- NEW CUMULATIVE CHART -->
+<div id="chart-cumulative"></div>
+
+<!-- MAP CONTROLS -->
+<div id="map-controls">
+  <button id="btn-prev" title="Previous year">⏮</button>
+  <button id="btn-play" title="Play/Pause">▶</button>
+  <button id="btn-next" title="Next year">⏭</button>
+  <span id="year-label">Year: —</span>
+  <input id="year-range" type="range" min="1966" max="2024" step="1" value="1966">
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+
+
+  <!-- YOUR JS -->
+  
+<script src="script.js"></script>
+
 </body>
 </html>
