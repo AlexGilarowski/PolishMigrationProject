@@ -1,3 +1,4 @@
+console.log("✅ script_v2.js loaded");
 
 
 // shared margins & sizes for both line charts
@@ -199,7 +200,7 @@ d3.csv("data/Totals.csv").then(raw => {
       d3.select(this.parentNode).select("circle").style("display", "none");
       lineTooltip.style("display", "none");
     });
-});
+}).catch(err => console.error("Totals (main) load error:", err));
 
 
 /***********************
@@ -229,7 +230,6 @@ d3.csv("data/Totals.csv").then(raw => {
     };
   });
 
-  // use EXACT same layout as main chart
   const cumMargin = lineMargin;
   const cumWidth  = lineWidth;
   const cumHeight = lineHeight;
@@ -253,7 +253,7 @@ d3.csv("data/Totals.csv").then(raw => {
   ];
 
   const yCum = d3.scaleLinear()
-    .domain(d3.extent(allCumVals)) 
+    .domain(d3.extent(allCumVals))
     .nice()
     .range([cumHeight, 0]);
 
@@ -316,6 +316,7 @@ d3.csv("data/Totals.csv").then(raw => {
     .append("g")
     .attr("class", d => `cum-series ${d.key}`);
 
+  // visible line
   cumGroups.append("path")
     .attr("class", "cum-line")
     .attr("fill", "none")
@@ -323,6 +324,16 @@ d3.csv("data/Totals.csv").then(raw => {
     .attr("stroke", d => d.color)
     .attr("d", d => lineCum(d.values));
 
+  // focus dot
+  cumGroups.append("circle")
+    .attr("class", "cum-focus")
+    .attr("r", 4)
+    .attr("fill", d => d.color)
+    .attr("stroke", "white")
+    .attr("stroke-width", 1.5)
+    .style("display", "none");
+
+  // hover capture (same behavior as main chart)
   cumGroups.append("path")
     .attr("class", "cum-hover")
     .attr("fill", "none")
@@ -331,8 +342,20 @@ d3.csv("data/Totals.csv").then(raw => {
     .attr("pointer-events", "stroke")
     .attr("d", d => lineCum(d.values))
     .on("mousemove", function (event, d) {
+
+      // highlight hovered line, dim others
+      cumSvg.selectAll(".cum-line")
+        .attr("opacity", 0.25)
+        .attr("stroke-width", 2);
+
+      d3.select(this.parentNode).select(".cum-line")
+        .attr("opacity", 1)
+        .attr("stroke-width", 3.5);
+
+      // nearest point by year
       const [mx] = d3.pointer(event, cumSvg.node());
       const yearApprox = Math.round(xCum.invert(mx));
+
       const point = d.values.reduce((best, p) => {
         if (!best) return p;
         return Math.abs(p.Year - yearApprox) < Math.abs(best.Year - yearApprox)
@@ -341,9 +364,17 @@ d3.csv("data/Totals.csv").then(raw => {
 
       if (!point || !Number.isFinite(point.value)) {
         cumTooltip.style("display", "none");
+        d3.select(this.parentNode).select(".cum-focus").style("display", "none");
         return;
       }
 
+      // show focus dot
+      d3.select(this.parentNode).select(".cum-focus")
+        .style("display", null)
+        .attr("cx", xCum(point.Year))
+        .attr("cy", yCum(point.value));
+
+      // tooltip
       cumTooltip
         .style("display", "block")
         .html(
@@ -354,10 +385,19 @@ d3.csv("data/Totals.csv").then(raw => {
         .style("left", (event.clientX + 12) + "px")
         .style("top",  (event.clientY + 12) + "px");
     })
-    .on("mouseout", () => {
+    .on("mouseout", function () {
+
+      // reset lines
+      cumSvg.selectAll(".cum-line")
+        .attr("opacity", 1)
+        .attr("stroke-width", 2);
+
+      // hide dot + tooltip
+      d3.select(this.parentNode).select(".cum-focus").style("display", "none");
       cumTooltip.style("display", "none");
     });
-});
+
+}).catch(err => console.error("Totals (cumulative) load error:", err));
 
 
 /************
@@ -433,7 +473,16 @@ const mapTitle = mapSvg.append("text")
   .style("font-size", "16px")
   .style("font-weight", "bold");
 
+const mapYear = mapSvg.append("text")
+  .attr("class", "map-year")
+  .attr("x", 10)
+  .attr("y", 20)
+  .attr("text-anchor", "start")
+  .style("font-size", "18px")
+  .style("font-weight", "bold");
+
 const missingNote = mapSvg.append("text")
+  .attr("class", "missing-note")
   .attr("x", 0)
   .attr("y", mapHeight - 50)
   .attr("text-anchor", "start")
@@ -444,6 +493,7 @@ const missingNote = mapSvg.append("text")
   .text("Data for 2015 is missing");
 
 const eventNote = mapSvg.append("text")
+  .attr("class", "event-note")
   .attr("x", 0)
   .attr("y", mapHeight - 50)
   .attr("text-anchor", "start")
@@ -521,20 +571,15 @@ function updateMapForYear(year) {
   missingNote.style("display", year === 2015 ? null : "none");
 
   const ev = mapEvents.find(e => e.year === year);
-  if (ev) {
-    eventNote.style("display", null).text(ev.label);
-  } else {
-    eventNote.style("display", "none");
-  }
+  if (ev) eventNote.style("display", null).text(ev.label);
+  else eventNote.style("display", "none");
 
   const values = new Map();
   for (const row of emigTable) {
     const key = normName(row.Country);
     const raw = row[year] ?? "";
     const val = +String(raw).replace(/[, ]/g, "");
-    if (Number.isFinite(val) && val > 0) {
-      values.set(key, val);
-    }
+    if (Number.isFinite(val) && val > 0) values.set(key, val);
   }
 
   const valsInView = worldFeatures
@@ -542,20 +587,15 @@ function updateMapForYear(year) {
     .filter(v => v > 0);
 
   const colorScale = d3.scaleSequential(d3.interpolateReds)
-  .domain([
-    Math.log(1), 
-    Math.log(d3.max(valsInView) || 1)
-  ]);
-
+    .domain([Math.log(1), Math.log(d3.max(valsInView) || 1)]);
 
   const fmt = d3.format(",");
 
   countryPaths
     .attr("fill", f => {
-  const v = values.get(normName(getName(f))) || 0;
-  return v > 0 ? colorScale(Math.log(v)) : "#eee";
-})
-
+      const v = values.get(normName(getName(f))) || 0;
+      return v > 0 ? colorScale(Math.log(v)) : "#eee";
+    })
     .on("mousemove", (event, f) => {
       const name = getName(f);
       const v = values.get(normName(name));
@@ -595,3 +635,37 @@ function togglePlay() {
     updateMapForYear(currentYear);
   }, 1200);
 }
+
+/***********************
+ * CHART TOGGLE (ROBUST)
+ ***********************/
+window.addEventListener("DOMContentLoaded", () => {
+  const chartDiv = document.getElementById("chart");
+  const cumDiv = document.getElementById("chart-cumulative");
+  const btn = document.getElementById("btn-toggle-chart");
+
+  if (!chartDiv || !cumDiv || !btn) return;
+
+  // default: show yearly, hide cumulative
+  cumDiv.style.display = "none";
+  chartDiv.style.display = "block";
+  btn.textContent = "Switch to cumulative";
+
+  let showing = "yearly";
+
+  btn.addEventListener("click", () => {
+    if (showing === "yearly") {
+      chartDiv.style.display = "none";
+      cumDiv.style.display = "block";
+      btn.textContent = "Switch to yearly";
+      showing = "cumulative";
+    } else {
+      cumDiv.style.display = "none";
+      chartDiv.style.display = "block";
+      btn.textContent = "Switch to cumulative";
+      showing = "yearly";
+    }
+  });
+});
+
+

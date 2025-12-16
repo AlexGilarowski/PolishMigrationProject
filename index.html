@@ -3,40 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Polish Migration 1966–2024 EXPERIMENT</title>
+  <title>Polish Migration 1966–2024</title>
 
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
-
-
-  <!-- D3 must be loaded BEFORE script.js -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
+
 <body>
-  <!-- LINE CHART -->
- <!-- MAIN YEARLY LINE CHART -->
-<div id="chart"></div>
+  <main class="page">
 
-<!-- NEW CUMULATIVE CHART -->
-<div id="chart-cumulative"></div>
+    <!-- HERO: putting GIF FIRST, then title + intro -->
+    <header class="hero">
+      <img
+        src="assets/hero.gif"
+        alt="Animated preview of emigration map over time"
+        class="hero__media"
+      />
 
-<!-- MAP CONTROLS -->
-<div id="map-controls">
-  <button id="btn-prev" title="Previous year">⏮</button>
-  <button id="btn-play" title="Play/Pause">▶</button>
-  <button id="btn-next" title="Next year">⏭</button>
-  <span id="year-label">Year: —</span>
-  <input id="year-range" type="range" min="1966" max="2024" step="1" value="1966">
-</div>
+      <div class="hero__content">
+        <h1>Polish Migration 1966–2024</h1>
+        <p>
+          Interactive visualizations of Polish migration over time: annual totals, cumulative trends,
+          and an animated world map of emigration destinations.
+        </p>
 
-<!-- MAP -->
-<div id="map"></div>
+        <div class="hero__meta">
+          <span><strong>Tool:</strong> D3.js</span>
+          <span><strong>Years:</strong> 1966–2024</span>
+        </div>
+      </div>
+    </header>
 
+    <!-- CHARTS -->
+    <section class="card">
+      <div class="card__header">
+        <h2 class="section-title">Trends over time</h2>
+        <p class="section-subtitle">Hover to see values. Use the button to switch between yearly and cumulative views.</p>
+      </div>
 
+      <div id="chart-toggle-bar">
+        <button id="btn-toggle-chart" type="button" aria-pressed="false">
+          Switch to cumulative
+        </button>
+      </div>
 
-  <!-- YOUR JS -->
-  
-<script src="script.js"></script>
+      <div id="chart"></div>
+      <div id="chart-cumulative"></div>
+    </section>
 
+    <!-- MAP -->
+    <section class="card">
+      <div class="card__header">
+        <h2 class="section-title">Emigration destinations</h2>
+        <p class="section-subtitle">Use the slider or play button to explore changes by year.</p>
+      </div>
+
+      <div id="map-controls">
+        <button id="btn-prev" title="Previous year">⏮</button>
+        <button id="btn-play" title="Play/Pause">▶</button>
+        <button id="btn-next" title="Next year">⏭</button>
+        <span id="year-label">Year: —</span>
+        <input id="year-range" type="range" min="1966" max="2024" step="1" value="1966">
+      </div>
+
+      <div id="map"></div>
+    </section>
+
+    <footer class="footer">
+      Master’s Project • Alexandra Gilarowski • CUNY Graduate Center
+    </footer>
+
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
